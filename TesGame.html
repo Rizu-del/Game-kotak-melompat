@@ -1,0 +1,150 @@
+<!DOCTYPE html><html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Kotak Melompat</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            background-color: lightblue;
+            color: black;
+            touch-action: manipulation;
+        }
+        canvas {
+            border: 2px solid black;
+            background: light gray;
+            display: block;
+            margin: auto;
+        }
+        .jump-button, .restart-button {
+            display: block;
+            width: 100px;
+            height: 50px;
+            margin: 20px auto;
+            font-size: 18px;
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 10px;
+        }
+        .restart-button {
+            background-color: blue;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Game Kotak Melompat</h1>
+    <p>Tekan tombol di bawah atau ketuk layar untuk melompat!</p>
+    <canvas id="gameCanvas" width="600" height="300"></canvas>
+    <button class="jump-button" onclick="jump()">Lompat</button>
+    <button class="restart-button" onclick="restartGame()">Mulai Lagi</button>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const restartButton = document.querySelector(".restart-button");let player, obstacles, gameOver, score, speed;
+
+    function initGame() {
+        player = { x: 50, y: 250, width: 40, height: 40, dy: 0, gravity: 0.5, jumpPower: -10, onGround: false };
+        obstacles = [];
+        gameOver = false;
+        score = 0;
+        speed = 5;
+        restartButton.style.display = "none";
+        gameLoop();
+    }
+
+    function drawPlayer() {
+        ctx.fillStyle = "black";
+        ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+
+    function drawObstacles() {
+        ctx.fillStyle = "brown";
+        obstacles.forEach(obstacle => {
+            ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+        });
+    }
+
+    function updatePlayer() {
+        player.y += player.dy;
+        player.dy += player.gravity;
+        if (player.y >= 250) {
+            player.y = 250;
+            player.onGround = true;
+        } else {
+            player.onGround = false;
+        }
+    }
+
+    function updateObstacles() {
+        obstacles.forEach((obstacle, index) => {
+            obstacle.x -= speed;
+            if (obstacle.x + obstacle.width < 0) {
+                obstacles.splice(index, 1);
+                score++;
+                if (score % 5 === 0) {
+                    speed += 1; 
+                }
+            }
+            if (
+                player.x < obstacle.x + obstacle.width &&
+                player.x + player.width > obstacle.x &&
+                player.y < obstacle.y + obstacle.height &&
+                player.y + player.height > obstacle.y
+            ) {
+                gameOver = true;
+                restartButton.style.display = "block";
+            }
+        });
+    }
+
+    function jump() {
+        if (player.onGround) {
+            player.dy = player.jumpPower;
+        }
+    }
+
+    function gameLoop() {
+        if (!gameOver) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPlayer();
+            drawObstacles();
+            updatePlayer();
+            updateObstacles();
+            ctx.fillStyle = "black";
+            ctx.font = "20px Arial";
+            ctx.fillText("Score: " + score, 10, 20);
+            requestAnimationFrame(gameLoop);
+        } else {
+            ctx.fillStyle = "black";
+            ctx.font = "30px Arial";
+            ctx.fillText("Game Over!", 220, 150);
+            ctx.fillText("Score: " + score, 250, 200);
+        }
+    }
+
+    function restartGame() {
+        initGame();
+    }
+
+    document.addEventListener("keydown", function(event) {
+        if (event.key === " ") jump();
+    });
+    
+    document.addEventListener("touchstart", function() {
+        jump();
+    });
+
+    setInterval(() => {
+        if (!gameOver) {
+            obstacles.push({ x: canvas.width, y: 260, width: 30, height: 30 });
+        }
+    }, 1500);
+
+    initGame();
+</script>
+
+</body>
+</html>
